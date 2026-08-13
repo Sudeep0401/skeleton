@@ -13,8 +13,30 @@ WORKDIR /app
 RUN mkdir -p /app/keys/current \
     /app/keys/revoked
 
+RUN openssl req \
+    -x509 \
+    -newkey rsa:2048 \
+    -nodes \
+    -sha256 \
+    -days 3650 \
+    -keyout /app/keys/current/current.key.pem \
+    -out /app/keys/current/current.cert.pem \
+    -subj "/CN=fw-signing-2026-current"
+
+RUN openssl req \
+    -x509 \
+    -newkey rsa:2048 \
+    -nodes \
+    -sha256 \
+    -days 3650 \
+    -keyout /app/keys/revoked/revoked.key.pem \
+    -out /app/keys/revoked/revoked.cert.pem \
+    -subj "/CN=fw-signing-2025-revoked"
+
 ENV CURRENT_CERT_PATH=/app/keys/current/current.cert.pem
 ENV CURRENT_KEY_PATH=/app/keys/current/current.key.pem
+ENV REVOKED_CERT_PATH=/app/keys/revoked/revoked.cert.pem
+ENV REVOKED_KEY_PATH=/app/keys/revoked/revoked.key.pem
 
 COPY package.json .
 
@@ -34,10 +56,4 @@ COPY fixtures/build_manifest.csv /app/fixtures/build_manifest.csv
 
 COPY reports/publications.expected.txt /app/reports/publications.expected.txt
 
-COPY publisher/ /app/publisher/
-
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["docker-entrypoint.sh"]
+RUN mkdir -p /app/publisher
